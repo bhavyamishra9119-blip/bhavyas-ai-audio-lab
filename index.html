@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" href="favicon.png?v=20260826_V600">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bhavya's AI Audio Lab — Generative Neural Sound Studio</title>
+  <meta name="description" content="Generative WebAudio neural synthesizer, sound FX lab, and binaural focus soundscapes in 3D WebGL.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link rel="stylesheet" href="style.css?v=20260826_V600">
+  <link rel="manifest" href="/manifest.json">
+</head>
+<body>
+  <!-- 3D WebGL Audio Waveform Visualizer -->
+  <div id="webgl-container"></div>
+
+  <!-- Header -->
+  <header class="audio-header">
+    <div class="header-left">
+      <a href="https://bhavyas-ai-hub.vercel.app" class="hub-back-pill" title="Return to Master Hub">
+        <span class="pulse-dot"></span>
+        <span class="pill-title">BHAVYA'S AI MASTER HUB</span>
+        <span class="pill-arrow">↗</span>
+      </a>
+      <div class="app-brand">
+        <div class="brand-icon"><img src="logo-3d.png?v=20260826_V600" class="brand-3d-logo-img" alt="Logo"></div>
+        <div class="brand-info">
+          <h1>AI AUDIO LAB</h1>
+          <div class="brand-sub">NEURAL WEBAUDIO SYNTHESIZER & STEM LAB • v3.0.0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-center">
+      <div class="soundscape-selector">
+        <label for="soundscape-select">GEN ACTIVE SOUNDSCAPE:</label>
+        <select id="soundscape-select">
+          <option value="cyber-drone">🌌 Cyberpunk Ambient Drone (C Minor)</option>
+          <option value="alpha-focus">🧠 10Hz Alpha Brainwave (Deep Focus)</option>
+          <option value="gamma-boost">⚡ 40Hz Gamma Frequency (High Alert)</option>
+          <option value="cyber-rain">🌧️ Neon City Binaural Rain & White Noise</option>
+          <option value="space-void">🪐 Deep Space Vacuum Sub-Bass (432Hz)</option>
+          <option value="scifi-ui">🛸 Hologram UI Chimes & Sci-Fi SFX</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <button id="toggle-play-btn" class="btn btn-primary glow-btn">
+        <span class="btn-icon">▶</span>
+        <span>START SYNTH</span>
+      </button>
+      
+      <button id="teleport-media-btn" class="btn btn-secondary" style="background:rgba(168,85,247,0.15);border:1px solid rgba(168,85,247,0.4);color:#c084fc;" title="Send active soundscape theme to Media Studio for video/image generation">
+        <span>🎬 TO MEDIA STUDIO</span>
+      </button>
+      <button id="record-export-btn" class="btn btn-secondary">
+        <span>● RECORD / EXPORT WAV</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Studio Workspace -->
+  <main class="audio-workspace">
+    <!-- Left FX & Oscillator Controls -->
+    <aside class="audio-controls-panel">
+      <div class="panel-header">
+        <h3>SYNTHESIZER CONTROLS</h3>
+        <span class="panel-badge">REALTIME DSP</span>
+      </div>
+
+      <div class="control-group">
+        <div class="ctrl-row">
+          <label>OSCILLATOR TYPE</label>
+          <select id="osc-type-select" class="ctrl-select">
+            <option value="sawtooth">Sawtooth (Cyber Lead)</option>
+            <option value="sine" selected>Sine (Pure Sub)</option>
+            <option value="square">Square (Retro 8-Bit)</option>
+            <option value="triangle">Triangle (Warm Soft)</option>
+          </select>
+        </div>
+        <div class="ctrl-row">
+          <div class="slider-header">
+            <span>FILTER CUTOFF (Hz)</span>
+            <strong id="val-cutoff">850 Hz</strong>
+          </div>
+          <input type="range" id="slider-cutoff" min="100" max="8000" value="850" class="ctrl-slider">
+        </div>
+        <div class="ctrl-row">
+          <div class="slider-header">
+            <span>RESONANCE (Q)</span>
+            <strong id="val-resonance">4.2</strong>
+          </div>
+          <input type="range" id="slider-resonance" min="0.1" max="20" step="0.1" value="4.2" class="ctrl-slider">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <div class="control-label">SPATIAL EFFECTS & DELAY</div>
+        <div class="ctrl-row">
+          <div class="slider-header">
+            <span>STEREO REVERB WET</span>
+            <strong id="val-reverb">45%</strong>
+          </div>
+          <input type="range" id="slider-reverb" min="0" max="100" value="45" class="ctrl-slider">
+        </div>
+        <div class="ctrl-row">
+          <div class="slider-header">
+            <span>FEEDBACK DELAY</span>
+            <strong id="val-delay">320 ms</strong>
+          </div>
+          <input type="range" id="slider-delay" min="0" max="1000" value="320" class="ctrl-slider">
+        </div>
+        <div class="ctrl-row">
+          <div class="slider-header">
+            <span>MASTER VOLUME</span>
+            <strong id="val-volume">75%</strong>
+          </div>
+          <input type="range" id="slider-volume" min="0" max="100" value="75" class="ctrl-slider">
+        </div>
+      </div>
+    
+      <!-- Neural Text-to-Speech Engine -->
+      <div class="control-group" style="margin-top: 14px; border-top: 1px solid rgba(0, 242, 254, 0.2); padding-top: 12px;">
+        <div class="control-label" style="color: #00f2fe; font-weight: 700;">🗣️ NEURAL TEXT-TO-SPEECH (TTS)</div>
+        <textarea id="tts-text-input" rows="3" class="ctrl-select" style="width: 100%; border-radius: 8px; padding: 8px; color: #fff; background: rgba(5,10,20,0.85); resize: vertical; font-size: 12px; margin-top: 6px;" placeholder="Type any text to synthesize into lifelike AI speech..."></textarea>
+        <div style="display: flex; gap: 6px; margin-top: 6px;">
+          <select id="tts-voice-select" class="ctrl-select" style="flex: 1; font-size: 11px;">
+            <option value="">Default AI Neural Voice</option>
+          </select>
+          <button class="btn btn-primary" onclick="speakNeuralText()" style="padding: 6px 12px; font-size: 11.5px;">
+            <span>🔊 SPEAK</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- AI Chord Progression & Harmonic Arpeggiator -->
+      <div class="control-group" style="margin-top: 14px; border-top: 1px solid rgba(0, 242, 254, 0.2); padding-top: 12px;">
+        <div class="control-label" style="color: #38bdf8; font-weight: 700; display:flex; justify-content:space-between; align-items:center;">
+          <span>🎹 CHORD PROGRESSIONS</span>
+          <span id="chord-indicator" style="font-size:9.5px; color:#10b981; font-family:'Fira Code',monospace; display:none;">● PLAYING</span>
+        </div>
+        
+        <div style="display:flex; gap:6px; margin-top:6px;">
+          <select id="chord-preset-select" class="ctrl-select" style="flex:1; font-size:11px;" onchange="loadSelectedChordPreset()">
+            <option value="cyberpunk">🌆 Cyberpunk (Am - F - C - G)</option>
+            <option value="lofi">☕ Lofi Sunset (Dm7 - G7 - Cmaj7 - Am7)</option>
+            <option value="space">🌌 Space Odyssey (Cm - Ab - Eb - Bb)</option>
+            <option value="synthwave">⚡ Synthwave (Fmaj7 - Em7 - Dm7 - C)</option>
+            <option value="anime">🌸 Neo-Tokyo (Fmaj7 - G - Em - Am)</option>
+            <option value="techno">🔮 Dark Techno (Phrygian Dm - Eb)</option>
+          </select>
+        </div>
+
+        <div id="chord-pills-row" style="display:flex; gap:4px; margin-top:8px; overflow-x:auto; padding-bottom:4px;"></div>
+
+        <div class="ctrl-row" style="margin-top:6px;">
+          <div class="slider-header">
+            <span>TEMPO (BPM)</span>
+            <strong id="val-chord-bpm">115 BPM</strong>
+          </div>
+          <input type="range" id="slider-chord-bpm" min="60" max="180" value="115" class="ctrl-slider" oninput="updateChordBpm(this.value)">
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; margin-top:8px;">
+          <button class="btn btn-primary" id="btn-play-chords" onclick="toggleChordPlayback('chords')" style="padding:6px; font-size:11px;">
+            <span>▶ PLAY CHORDS</span>
+          </button>
+          <button class="btn btn-secondary" id="btn-play-arp" onclick="toggleChordPlayback('arp')" style="padding:6px; font-size:11px; color:#38bdf8; border-color:rgba(56,189,248,0.4);">
+            <span>✨ ARPEGGIATE</span>
+          </button>
+        </div>
+
+        <button class="btn btn-secondary" onclick="generateAIProgression()" id="btn-ai-progression" style="width:100%; margin-top:6px; padding:6px; font-size:11px; background:rgba(167,139,250,0.1); border-color:rgba(167,139,250,0.4); color:#a78bfa;">
+          <span>🧠 AI Generate Progression</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Center Stage 3D Spectrum & Keyboard -->
+    <section class="visualizer-center">
+      <div class="spectrum-hud">
+        <div class="hud-item"><span>SAMPLE RATE:</span> <strong>48,000 Hz</strong></div>
+        <div class="hud-item"><span>DSP LATENCY:</span> <strong id="dsp-latency">~3.2 ms</strong></div>
+        <div class="hud-item"><span>AUDIO BUFFER:</span> <strong>FLOAT32 512-SMP</strong></div>
+      </div>
+
+      <!-- Interactive 16-Key Hologram Synth Pad -->
+      <div class="synth-pads-container">
+        <div class="pads-grid" id="pads-grid"></div>
+      </div>
+    </section>
+
+    <!-- Right Live Stem & Sound FX Preset Vault -->
+    <aside class="audio-vault-panel">
+      <div class="panel-header">
+        <h3>SFX & STEM VAULT</h3>
+        <span class="panel-badge">ONE-SHOTS</span>
+      </div>
+
+      <div class="sfx-buttons-list">
+        <button class="sfx-btn" data-sound="laser">
+          <span class="sfx-icon">⚡</span>
+          <div class="sfx-info">
+            <strong>Cyber Laser Pulse</strong>
+            <small>High resonant downward sweep</small>
+          </div>
+        </button>
+        <button class="sfx-btn" data-sound="teleport">
+          <span class="sfx-icon">🌀</span>
+          <div class="sfx-info">
+            <strong>Quantum Teleport</strong>
+            <small>Phase-shifted arpeggiated riser</small>
+          </div>
+        </button>
+        <button class="sfx-btn" data-sound="subdrop">
+          <span class="sfx-icon">💥</span>
+          <div class="sfx-info">
+            <strong>Sub-Bass Impact</strong>
+            <small>30Hz cinematic drop</small>
+          </div>
+        </button>
+        <button class="sfx-btn" data-sound="chime">
+          <span class="sfx-icon">✨</span>
+          <div class="sfx-info">
+            <strong>Holographic Chime</strong>
+            <small>Crystalline harmonics</small>
+          </div>
+        </button>
+        <button class="sfx-btn" data-sound="shield">
+          <span class="sfx-icon">🛡️</span>
+          <div class="sfx-info">
+            <strong>Shield Activation</strong>
+            <small>Frequency modulated barrier</small>
+          </div>
+        </button>
+      </div>
+
+      <div class="export-box">
+        <h4>COMMERCIAL AUDIO EXPORT</h4>
+        <p>Generated audio streams are 100% royalty-free, client-side synthesized, and ready for your production projects.</p>
+      </div>
+
+      <!-- ── AI TRANSCRIPTION PANEL ── -->
+      <div style="margin-top:14px;border-top:1px solid rgba(0,242,254,0.2);padding-top:12px;">
+        <div class="control-label" style="color:#a78bfa;font-weight:700;margin-bottom:8px;">🧠 AI LECTURE TRANSCRIBER</div>
+        <input type="file" id="transcribeFileInput" accept="audio/*,video/*" style="display:none">
+        <button class="btn btn-secondary" onclick="document.getElementById('transcribeFileInput').click()" style="width:100%;margin-bottom:6px;font-size:11.5px;background:rgba(167,139,250,0.1);border-color:rgba(167,139,250,0.4);color:#a78bfa;">
+          📂 Load Audio / Lecture
+        </button>
+        <button class="btn btn-primary" onclick="startAITranscription()" id="btn-transcribe" style="width:100%;font-size:11.5px;background:rgba(167,139,250,0.2);" disabled>
+          🧠 Transcribe with AI
+        </button>
+        <div id="bpm-display" style="margin-top:8px;display:none;">
+          <div style="font-size:10px;color:#8899b5;font-family:'Fira Code',monospace;margin-bottom:4px;">DETECTED AUDIO METRICS</div>
+          <div id="bpm-values" style="font-size:12px;color:#00f2fe;font-family:'Fira Code',monospace;"></div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- ── TRANSCRIPTION MODAL ── -->
+  <div id="transcription-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:#050a14;border:1px solid rgba(0,242,254,0.3);border-radius:16px;padding:24px;max-width:680px;width:90%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 0 40px rgba(0,242,254,0.1);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h3 style="font-size:15px;color:#f0f4fc;font-family:'Space Grotesk',sans-serif;">🧠 AI Transcription</h3>
+        <button onclick="document.getElementById('transcription-modal').style.display='none'" style="background:none;border:none;color:#8899b5;cursor:pointer;font-size:18px;">✕</button>
+      </div>
+      <div id="transcription-status" style="font-size:12px;color:#00f2fe;font-family:'Fira Code',monospace;margin-bottom:12px;"></div>
+      <textarea id="transcription-output" style="flex:1;min-height:300px;background:rgba(255,255,255,0.04);border:1px solid rgba(0,242,254,0.2);border-radius:8px;padding:12px;color:#f0f4fc;font-size:12.5px;line-height:1.6;font-family:'Fira Code',monospace;resize:vertical;" placeholder="Transcription will appear here…" readonly></textarea>
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button onclick="copyTranscription()" style="flex:1;padding:10px;background:rgba(0,242,254,0.1);border:1px solid rgba(0,242,254,0.3);border-radius:8px;color:#00f2fe;font-size:12px;cursor:pointer;font-family:'Space Grotesk',sans-serif;">📋 Copy Text</button>
+        <button onclick="downloadTranscription()" style="flex:1;padding:10px;background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.3);border-radius:8px;color:#a78bfa;font-size:12px;cursor:pointer;font-family:'Space Grotesk',sans-serif;">⬇️ Download .txt</button>
+        <button onclick="sendTranscriptionToDocuMind()" style="flex:1;padding:10px;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);border-radius:8px;color:#00ff88;font-size:12px;cursor:pointer;font-family:'Space Grotesk',sans-serif;">📄 Send to DocuMind</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=20260826_V600"></script>
+  <script src="omni-palette.js?v=20260826_V600"></script>
+  <script src="./universal-ecosystem-hud.js"></script>
+</body>
+</html>
